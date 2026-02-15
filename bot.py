@@ -6,21 +6,25 @@ import emoji
 from aiogram import Bot, Dispatcher
 from aiogram.types import Message
 from aiogram.filters import CommandStart
+from aiogram.enums import ParseMode
 
 TOKEN = os.getenv("TOKEN")
 
 PREFIX_TEXT = "аккаунт зарегистрирован на 15 летнюю девочку,которая опять же пойдет в полицию со мной,ну можем мирно решить,выбор только за тобой,двоих уже так закрыли,также переписка будет отправлена родственникам и знакомым. Выбор за тобой как разойтись,мирно или по плохому.\n\n"
 
-bot = Bot(token=TOKEN)
+bot = Bot(token=TOKEN, parse_mode=ParseMode.HTML)
 dp = Dispatcher()
 
 def remove_emoji(text):
     return emoji.replace_emoji(text, replace='')
 
 def remove_interest_line(text):
-    # Удаляет строку "Интересовались этим:" независимо от числа
     pattern = r"👁?\s*Интересовались этим:.*"
     return re.sub(pattern, "", text)
+
+def make_links_clickable(text):
+    url_pattern = r'(https?://\S+)'
+    return re.sub(url_pattern, r'<a href="\1">\1</a>', text)
 
 @dp.message(CommandStart())
 async def start(message: Message):
@@ -32,6 +36,7 @@ async def clean(message: Message):
         text = message.text
         text = remove_emoji(text)
         text = remove_interest_line(text)
+        text = make_links_clickable(text)
         text = text.strip()
         await message.answer(PREFIX_TEXT + text)
 
